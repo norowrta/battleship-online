@@ -1,0 +1,59 @@
+<svg aria-hidden="true" style="position: absolute; width: 0; height: 0; overflow: hidden;" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+<symbol id="icon-boatBackHit" viewBox="0 0 32 32">
+<path fill="#d1d2de" style="fill: var(--color1, #d1d2de)" d="M2 0h28v17c0 7.732-6.268 14-14 14s-14-6.268-14-14v-17z"></path>
+<path fill="#f05" style="fill: var(--color2, #f05)" d="M24 16c0 4.418-3.582 8-8 8s-8-3.582-8-8c0-4.418 3.582-8 8-8s8 3.582 8 8z"></path>
+</symbol>
+<symbol id="icon-boatFrontHit" viewBox="0 0 32 32">
+<path fill="#d1d2de" style="fill: var(--color1, #d1d2de)" d="M2 25.117c0-9.449 5.114-18.159 13.365-22.763 0.395-0.22 0.875-0.22 1.27 0 8.251 4.605 13.365 13.314 13.365 22.763v6.883h-28v-6.883z"></path>
+<path fill="#f05" style="fill: var(--color2, #f05)" d="M24 16c0 4.418-3.582 8-8 8s-8-3.582-8-8c0-4.418 3.582-8 8-8s8 3.582 8 8z"></path>
+</symbol>
+<symbol id="icon-boatMiddleHit" viewBox="0 0 32 32">
+<path fill="#d1d2de" style="fill: var(--color1, #d1d2de)" d="M2 0h28v32h-28v-32z"></path>
+<path fill="#f05" style="fill: var(--color2, #f05)" d="M24 16c0 4.418-3.582 8-8 8s-8-3.582-8-8c0-4.418 3.582-8 8-8s8 3.582 8 8z"></path>
+</symbol>
+<symbol id="icon-figma" viewBox="0 0 22 32">
+<path fill="#e84d2a" style="fill: var(--color3, #e84d2a)" d="M0 5.124c0-2.83 2.294-5.124 5.124-5.124h5.124v10.247h-5.124c-2.83 0-5.124-2.294-5.124-5.124z"></path>
+<path fill="#f56f63" style="fill: var(--color4, #f56f63)" d="M20.495 5.124c0-2.83-2.294-5.124-5.124-5.124h-5.124v10.247h5.124c2.83 0 5.124-2.294 5.124-5.124z"></path>
+<path fill="#2ab7f3" style="fill: var(--color5, #2ab7f3)" d="M20.495 15.371c0-2.83-2.294-5.124-5.124-5.124s-5.124 2.294-5.124 5.124c0 2.83 2.294 5.124 5.124 5.124s5.124-2.294 5.124-5.124z"></path>
+<path fill="#9c5df3" style="fill: var(--color6, #9c5df3)" d="M0 15.371c0-2.83 2.294-5.124 5.124-5.124h5.124v10.247h-5.124c-2.83 0-5.124-2.294-5.124-5.124z"></path>
+<path fill="#23c881" style="fill: var(--color7, #23c881)" d="M0 25.619c0-2.83 2.294-5.124 5.124-5.124h5.124v5.124c0 2.83-2.294 5.124-5.124 5.124s-5.124-2.294-5.124-5.124z"></path>
+</symbol>
+<symbol id="icon-battleship" viewBox="0 0 186 32">
+<path d="M0 32h14.33l4.128-4.128v-8.904l-3.293-3.293 3.293-3.293v-8.255l-4.128-4.128h-14.33v32zM7.328 26.203v-7.606h2.736l1.067 1.067v5.472l-1.067 1.067h-2.736zM7.328 12.846v-7.049h2.736l1.067 1.067v4.916l-1.067 1.067h-2.736z"></path>
+<path d="M19.623 32h6.91l0.696-6.493h4.499l0.696 6.493h7.281l-4.591-32h-10.899l-4.591 32zM29.501 4.684l1.577 14.841h-3.2l1.623-14.841z"></path>
+<path d="M44.387 32h7.327v-25.275h5.38v-6.725h-18.087v6.725h5.38v25.275z"></path>
+<path d="M63.409 32h7.328v-25.275h5.38v-6.725h-18.087v6.725h5.38v25.275z"></path>
+<path d="M77.989 32h13.959v-6.493h-6.632v-25.507h-7.327v32z"></path>
+<path d="M94.248 32h15.397v-6.493h-8.069v-6.632h7.142v-6.493h-7.142v-5.89h7.977v-6.493h-15.304v32z"></path>
+<path d="M115.98 32h10.064l4.128-4.128v-11.826l-3.432-3.432h-6.585l-0.835-0.835v-4.684l1.067-1.067h1.345l1.067 1.067v3.154h7.328v-6.122l-4.128-4.128h-9.878l-4.128 4.128v11.687l3.432 3.432h6.586l0.835 0.835v4.823l-1.067 1.067h-1.531l-1.067-1.067v-3.154h-7.328v6.122l4.128 4.128z"></path>
+<path d="M132.88 32h7.328v-11.826h4.081v11.826h7.327v-32h-7.327v12.8h-4.081v-12.8h-7.328v32z"></path>
+<path d="M162.637 32v-32h-7.327v32h7.327z"></path>
+<path d="M166.35 32h7.328v-10.991h6.956l4.128-4.127v-12.754l-4.128-4.128h-14.284v32zM173.677 15.443v-9.878h2.69l1.067 1.067v7.745l-1.067 1.067h-2.69z"></path>
+</symbol>
+<symbol id="icon-boatBack" viewBox="0 0 32 32">
+<path fill="#d1d2de" style="fill: var(--color1, #d1d2de)" d="M2 0h28v17c0 7.732-6.268 14-14 14s-14-6.268-14-14v-17z"></path>
+<path fill="#000" style="fill: var(--color8, #000)" opacity="0.1" d="M22 16c0 3.314-2.686 6-6 6s-6-2.686-6-6c0-3.314 2.686-6 6-6s6 2.686 6 6z"></path>
+</symbol>
+<symbol id="icon-boatFront" viewBox="0 0 32 32">
+<path fill="#d1d2de" style="fill: var(--color1, #d1d2de)" d="M2 25.117c0-9.449 5.114-18.159 13.365-22.763 0.395-0.22 0.875-0.22 1.27 0 8.251 4.605 13.365 13.314 13.365 22.763v6.883h-28v-6.883z"></path>
+<path fill="#000" style="fill: var(--color8, #000)" opacity="0.1" d="M22 16c0 3.314-2.686 6-6 6s-6-2.686-6-6c0-3.314 2.686-6 6-6s6 2.686 6 6z"></path>
+</symbol>
+<symbol id="icon-boatMiddle" viewBox="0 0 32 32">
+<path fill="#d1d2de" style="fill: var(--color1, #d1d2de)" d="M2 0h28v32h-28v-32z"></path>
+<path fill="#000" style="fill: var(--color8, #000)" opacity="0.1" d="M22 16c0 3.314-2.686 6-6 6s-6-2.686-6-6c0-3.314 2.686-6 6-6s6 2.686 6 6z"></path>
+</symbol>
+<symbol id="icon-botMiss" viewBox="0 0 32 32">
+<path fill="#61c6ff" style="fill: var(--color9, #61c6ff)" opacity="0.2" d="M4 0h24c2.209 0 4 1.791 4 4v24c0 2.209-1.791 4-4 4h-24c-2.209 0-4-1.791-4-4v-24c0-2.209 1.791-4 4-4z"></path>
+<path fill="#61c6ff" style="fill: var(--color9, #61c6ff)" d="M24 16c0 4.418-3.582 8-8 8s-8-3.582-8-8c0-4.418 3.582-8 8-8s8 3.582 8 8z"></path>
+</symbol>
+<symbol id="icon-hit" viewBox="0 0 32 32">
+<path fill="#9d9d9d" style="fill: var(--color10, #9d9d9d)" opacity="0.2" d="M4 0h24c2.209 0 4 1.791 4 4v24c0 2.209-1.791 4-4 4h-24c-2.209 0-4-1.791-4-4v-24c0-2.209 1.791-4 4-4z"></path>
+<path fill="#f05" style="fill: var(--color2, #f05)" d="M24 16c0 4.418-3.582 8-8 8s-8-3.582-8-8c0-4.418 3.582-8 8-8s8 3.582 8 8z"></path>
+</symbol>
+<symbol id="icon-miss" viewBox="0 0 32 32">
+<path fill="#9d9d9d" style="fill: var(--color10, #9d9d9d)" opacity="0.2" d="M4 0h24c2.209 0 4 1.791 4 4v24c0 2.209-1.791 4-4 4h-24c-2.209 0-4-1.791-4-4v-24c0-2.209 1.791-4 4-4z"></path>
+<path fill="#353839" style="fill: var(--color11, #353839)" opacity="0.5" d="M24 16c0 4.418-3.582 8-8 8s-8-3.582-8-8c0-4.418 3.582-8 8-8s8 3.582 8 8z"></path>
+</symbol>
+</defs>
+</svg>

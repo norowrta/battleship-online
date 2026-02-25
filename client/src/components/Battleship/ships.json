@@ -1,0 +1,47 @@
+[
+  {
+    "name": "Battleship",
+    "size": 4,
+    "placed": false,
+    "orientation": "horizontal",
+    "coordinates": [],
+    "hits": 0,
+    "sunk": false
+  },
+  {
+    "name": "Submarine",
+    "size": 3,
+    "placed": false,
+    "orientation": "horizontal",
+    "coordinates": [],
+    "hits": 0,
+    "sunk": false
+  },
+  {
+    "name": "Cruiser",
+    "size": 2,
+    "placed": false,
+    "orientation": "horizontal",
+    "coordinates": [],
+    "hits": 0,
+    "sunk": false
+  },
+  {
+    "name": "Aircraft Carrier",
+    "size": 5,
+    "placed": false,
+    "orientation": "horizontal",
+    "coordinates": [],
+    "hits": 0,
+    "sunk": false
+  },
+  {
+    "name": "Destroyer",
+    "size": 3,
+    "placed": false,
+    "orientation": "horizontal",
+    "coordinates": [],
+    "hits": 0,
+    "sunk": false
+  }
+]
