@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { socket } from "./socket";
 import Header from "./components/Header/Header";
 import Battleship from "./components/Battleship/Battleships";
 
@@ -10,6 +11,8 @@ export default function App() {
     () => Number(localStorage.getItem("lose")) || 0,
   );
 
+  const [onlinePlayers, setOnlinePlayers] = useState(0);
+
   useEffect(() => {
     localStorage.setItem("win", win);
   }, [win]);
@@ -18,9 +21,15 @@ export default function App() {
     localStorage.setItem("lose", lose);
   }, [lose]);
 
+  useEffect(() => {
+    const handleOnlineCount = (n) => setOnlinePlayers(n);
+    socket.on("online_count", handleOnlineCount);
+    return () => socket.off("online_count", handleOnlineCount);
+  }, []);
+
   return (
     <>
-      <Header wins={win} loses={lose} />
+      <Header wins={win} loses={lose} onlinePlayers={onlinePlayers} />
       <Battleship setWin={setWin} setLose={setLose} />
     </>
   );

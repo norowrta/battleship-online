@@ -1,6 +1,6 @@
 [
   {
-    "name": "Battleship",
+    "name": "Battleship (4)",
     "size": 4,
     "placed": false,
     "orientation": "horizontal",
@@ -9,7 +9,7 @@
     "sunk": false
   },
   {
-    "name": "Submarine",
+    "name": "Submarine (3)",
     "size": 3,
     "placed": false,
     "orientation": "horizontal",
@@ -18,7 +18,7 @@
     "sunk": false
   },
   {
-    "name": "Cruiser",
+    "name": "Cruiser (2)",
     "size": 2,
     "placed": false,
     "orientation": "horizontal",
@@ -27,7 +27,7 @@
     "sunk": false
   },
   {
-    "name": "Aircraft Carrier",
+    "name": "Aircraft Carrier (5)",
     "size": 5,
     "placed": false,
     "orientation": "horizontal",
@@ -36,7 +36,7 @@
     "sunk": false
   },
   {
-    "name": "Destroyer",
+    "name": "Destroyer (3)",
     "size": 3,
     "placed": false,
     "orientation": "horizontal",

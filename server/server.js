@@ -17,9 +17,14 @@ server.listen(3000, () => {
 let games = {};
 let waitingRoom = null;
 let playerRooms = {};
+let onlinePlayers = 0;
 
 io.on("connection", (socket) => {
-  console.log("New player connected:", socket.id);
+  onlinePlayers += 1;
+  io.emit("online_count", onlinePlayers);
+  console.log(
+    `New player connected:${socket.id}, online players: ${onlinePlayers} `,
+  );
 
   socket.on("player_ready", (data) => {
     if (waitingRoom !== null) {
@@ -158,10 +163,22 @@ io.on("connection", (socket) => {
       role: "player2",
       enemySunkShips: game.player1.sunkShips,
     });
+
+    socket.on("restart_game", () => {
+      const roomId = playerRooms[socket.id];
+      if (roomId) {
+        delete games[roomId];
+        io.in(roomId).socketsLeave(roomId);
+      }
+    });
   });
 
   socket.on("disconnect", () => {
-    console.log("Player disconnected:", socket.id);
+    onlinePlayers -= 1;
+    io.emit("online_count", onlinePlayers);
+    console.log(
+      ` Player disconnected: ${socket.id}, online players ${onlinePlayers} `,
+    );
   });
 });
 

@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { DndContext } from "@dnd-kit/core";
-import { io } from "socket.io-client";
 import DraggableShip from "./DraggableShip.jsx";
 import DroppableCell from "./DroppableCell.jsx";
 import Icon from "../Icon";
 import css from "./battleships.module.css";
 import shipsTemplate from "./ships.json";
 
+import { socket } from "../../socket.js";
+
 const letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
 const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-const socket = io("http://localhost:3000");
 
 function calculateCoordinates(startId, size, orientation) {
   return Array.from({ length: size }, (_, i) =>
@@ -42,6 +42,7 @@ export default function Battleship({ setWin, setLose }) {
   const [activeId, setActiveId] = useState(null);
   const [previewCells, setPreviewCells] = useState([]);
   const [showHint, setShowHint] = useState(false);
+  const [stopwatchValue, setstopwatchValue] = useState(0);
 
   useEffect(() => {
     socket.on("update_game", (data) => {
@@ -55,15 +56,17 @@ export default function Battleship({ setWin, setLose }) {
       setGamePhase(true);
 
       if (data.winner) {
-        if (data.winner === socket.id) {
-          alert("You won!");
-          setWin((prev) => prev + 1);
-        } else {
-          alert("You lost!");
-          setLose((prev) => prev + 1);
-        }
-       setGamePhase(false);
-       setIsGameOver(true);
+        setTimeout(() => {
+          if (data.winner === socket.id) {
+            alert("You won!");
+            setWin((prev) => prev + 1);
+          } else {
+            alert("You lost!");
+            setLose((prev) => prev + 1);
+          }
+        }, 150);
+        setGamePhase(false);
+        setIsGameOver(true);
       }
     });
 
@@ -102,6 +105,7 @@ export default function Battleship({ setWin, setLose }) {
 
     socket.emit("player_ready", { board, shipsState });
     setIsWaiting(true);
+    setstopwatchValue(0);
   }
 
   function handleShoot(cellId) {
@@ -118,6 +122,9 @@ export default function Battleship({ setWin, setLose }) {
       setDestroyedShips([]);
       setIsGameOver(false);
       setGamePhase(false);
+      setIsWaiting(false);
+      setCurrentTurn(null);
+      setPlayerRole(null);
     } catch (err) {
       console.error(err);
     }
@@ -251,6 +258,28 @@ export default function Battleship({ setWin, setLose }) {
     );
   }
 
+  useEffect(() => {
+    let intervalId;
+    if (isWaiting) {
+      intervalId = setInterval(() => {
+        setstopwatchValue((prev) => prev + 1);
+      }, 1000);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isWaiting]);
+
+  function formatstopwatch(stopwatchValue) {
+    const minutes = Math.floor(stopwatchValue / 60);
+    const seconds = stopwatchValue % 60;
+    const padded = String(seconds).padStart(2, "0");
+    return minutes > 0 ? `${minutes}:${padded}` : `${stopwatchValue}s`;
+  }
+
   return (
     <DndContext
       onDragStart={handleDragStart}
@@ -381,13 +410,12 @@ export default function Battleship({ setWin, setLose }) {
                       "Aircraft Carrier (5)",
                       "Destroyer (3)",
                     ].map((shipName) => (
-                      <a
+                      <span
                         key={shipName}
-                        href="#"
                         className={`${css.shipyardDestroyed} ${destroyedShips.includes(shipName) ? css.destroyedShip : ""}`}
                       >
                         {shipName}
-                      </a>
+                      </span>
                     ))}
                   </div>
                 </div>
@@ -395,7 +423,7 @@ export default function Battleship({ setWin, setLose }) {
             </div>
           </div>
 
-          {!gamePhase && !isWaiting && (
+          {!gamePhase && !isWaiting && !isGameOver && (
             <button className={css.buttonPlay} onClick={startGame}>
               Play
             </button>
@@ -409,7 +437,7 @@ export default function Battleship({ setWin, setLose }) {
 
           {isWaiting && (
             <span className={css.waitingOpponent}>
-              Waiting for an opponent...
+              Waiting for an opponent… {formatstopwatch(stopwatchValue)}
             </span>
           )}
 

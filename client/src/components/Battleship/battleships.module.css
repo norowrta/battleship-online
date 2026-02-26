@@ -52,6 +52,8 @@
   align-items: center;
   background-color: #717c96;
   user-select: none;
+
+  transition: background-color 0.2s ease-in-out;
 }
 
 .playerBlue {
