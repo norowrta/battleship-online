@@ -6,13 +6,13 @@ import Icon from "../Icon";
 import css from "./battleships.module.css";
 import shipsTemplate from "./ships.json";
 import {
-  placeShipsRandomly,
   playerShoot,
   bot,
   fullReset,
   startGame,
+  setBoard as setBotBoard,
+  setShips as setBotShips,
 } from "./bot.js";
-
 import { socket } from "../../socket.js";
 
 const letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
@@ -42,17 +42,18 @@ export default function Battleship({ setWin, setLose }) {
 
   const [gameMode, setGameMode] = useState(null);
   const [isBotThinking, setIsBotThinking] = useState(false);
-
   const [gamePhase, setGamePhase] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
+
   const [currentTurn, setCurrentTurn] = useState(null);
   const [playerRole, setPlayerRole] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(15);
+  const [stopwatchValue, setStopwatchValue] = useState(0);
 
   const [activeId, setActiveId] = useState(null);
   const [previewCells, setPreviewCells] = useState([]);
   const [showHint, setShowHint] = useState(false);
-  const [stopwatchValue, setstopwatchValue] = useState(0);
 
   useEffect(() => {
     socket.on("update_game", (data) => {
@@ -62,10 +63,18 @@ export default function Battleship({ setWin, setLose }) {
       setPlayerRole(data.role);
       setDestroyedShips(data.enemySunkShips);
 
+      setTimeLeft(15);
       setIsWaiting(false);
+
+      if (data.disconnectWin) {
+        setGamePhase(false);
+        setIsGameOver(true);
+        return;
+      }
+
       setGamePhase(true);
 
-      if (data.winner) {
+      if (data.winner && !data.disconnectWin) {
         setTimeout(() => {
           if (data.winner === socket.id) {
             alert("You won!");
@@ -80,8 +89,42 @@ export default function Battleship({ setWin, setLose }) {
       }
     });
 
-    return () => socket.off("update_game");
+    socket.on("opponent_disconnected", (data) => {
+      alert(data.message);
+      setWin((prev) => prev + 1);
+      setGamePhase(false);
+      setIsGameOver(true);
+    });
+
+    return () => {
+      socket.off("update_game");
+      socket.off("opponent_disconnected");
+    };
   }, [setWin, setLose]);
+
+  useEffect(() => {
+    let timerInterval;
+    if (gamePhase && gameMode === "multiplayer") {
+      timerInterval = setInterval(() => {
+        setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => {
+      if (timerInterval) clearInterval(timerInterval);
+    };
+  }, [gamePhase, gameMode]);
+
+  useEffect(() => {
+    let intervalId;
+    if (isWaiting) {
+      intervalId = setInterval(() => {
+        setStopwatchValue((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isWaiting]);
 
   useEffect(() => {
     function handleKeyDown(event) {
@@ -106,29 +149,25 @@ export default function Battleship({ setWin, setLose }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [activeId]);
 
-  async function startMultiplayerGame() {
-    const allPlaced = shipsState.every((ship) => ship.placed === true);
-    if (!allPlaced) {
-      alert("Please place all ships!");
-      return;
+  function startMultiplayerGame() {
+    if (!shipsState.every((ship) => ship.placed === true)) {
+      return alert("Please place all ships!");
     }
-
     setGameMode("multiplayer");
     socket.emit("player_ready", { board, shipsState });
     setIsWaiting(true);
-    setstopwatchValue(0);
+    setStopwatchValue(0);
   }
 
   function startBotGame() {
-    const allPlaced = shipsState.every((ship) => ship.placed === true);
-    if (!allPlaced) {
-      alert("Please place all ships!");
-      return;
+    if (!shipsState.every((ship) => ship.placed === true)) {
+      return alert("Please place all ships!");
     }
     setGameMode("bot");
     fullReset();
+    setBotBoard(structuredClone(board));
+    setBotShips(structuredClone(shipsState));
     startGame();
-
     setIsWaiting(false);
     setGamePhase(true);
     setCurrentTurn(socket.id);
@@ -136,7 +175,6 @@ export default function Battleship({ setWin, setLose }) {
 
   function handleShoot(cellId) {
     if (!gamePhase) return;
-
     if (gameMode === "multiplayer") {
       socket.emit("shoot", cellId);
     } else if (gameMode === "bot") {
@@ -148,75 +186,75 @@ export default function Battleship({ setWin, setLose }) {
     if (isBotThinking || currentTurn !== socket.id) return;
     setIsBotThinking(true);
 
-    const playerShot = playerShoot(cellId);
-
-    if (!playerShot) {
-      setIsBotThinking(false);
-      return;
-    }
+    const playerResult = playerShoot(cellId);
+    if (!playerResult) return setIsBotThinking(false);
 
     setOppBoard((prev) =>
       prev.map((c) =>
-        c.id === playerShot.updatedCell.id ? playerShot.updatedCell : c,
+        c.id === playerResult.updatedCell.id ? playerResult.updatedCell : c,
       ),
     );
 
-    if (playerShoot.sunkShip) {
-      setDestroyedShips((prev) => [
-        ...prev,
-        `${playerShoot.sunkShip.name} (${playerShoot.sunkShip.size})`,
-      ]);
+    if (playerResult.sunkShip) {
+      setDestroyedShips((prev) => [...prev, playerResult.sunkShip.name]);
     }
 
-    if (playerShoot.gameFinished) {
+    if (playerResult.gameFinished) {
       setTimeout(() => {
         alert("You won!");
         setWin((prev) => prev + 1);
         setGamePhase(false);
         setIsGameOver(true);
       }, 300);
+      return setIsBotThinking(false);
+    }
+
+    if (playerResult.hit) {
+      setCurrentTurn(socket.id);
       setIsBotThinking(false);
       return;
     }
 
     setCurrentTurn("bot");
 
-    setTimeout(() => {
-      const botShot = bot();
+    function executeBotShooting() {
+      setTimeout(() => {
+        const botShot = bot();
 
-      setBoard((prev) =>
-        prev.map((c) =>
-          c.id === botShot.updatedCell.id ? botShot.updatedCell : c,
-        ),
-      );
+        setBoard((prev) =>
+          prev.map((c) =>
+            c.id === botShot.updatedCell.id ? botShot.updatedCell : c,
+          ),
+        );
 
-      if (botShot.gameFinished) {
-        setTimeout(() => {
-          alert("Bot won!");
-          setLose((prev) => prev + 1);
-          setGamePhase(false);
-          setIsGameOver(true);
-        }, 300);
-        setIsBotThinking(false);
-        return;
-      } else {
-        setCurrentTurn(socket.id);
-      }
-      setIsBotThinking(false);
-    }, 600);
-  }
+        if (botShot.gameFinished) {
+          setTimeout(() => {
+            alert("Bot won!");
+            setLose((prev) => prev + 1);
+            setGamePhase(false);
+            setIsGameOver(true);
+          }, 300);
+          return setIsBotThinking(false);
+        }
 
-  async function handleRestart() {
-    try {
-      if (gameMode === "multiplayer") {
-        socket.emit("restart_game");
-      } else if (gameMode === "bot") {
-        fullReset();
-      }
-    } catch (error) {
-      console.error(error);
+        if (botShot.hit) {
+          executeBotShooting();
+        } else {
+          setCurrentTurn(socket.id);
+          setIsBotThinking(false);
+        }
+      }, 600);
     }
 
+    executeBotShooting();
+  }
+
+  function handleRestart() {
+    if (gameMode === "multiplayer") {
+      socket.emit("restart_game");
+    } else if (gameMode === "bot") {
+      fullReset();
+    }
     setBoard(generateEmptyBoard());
     setOppBoard(generateEmptyBoard());
     setShipsState(structuredClone(shipsTemplate));
@@ -233,7 +271,6 @@ export default function Battleship({ setWin, setLose }) {
     const x = id % 10;
     const y = Math.floor(id / 10);
     const surrounding = [];
-
     for (let dx = -1; dx <= 1; dx++) {
       for (let dy = -1; dy <= 1; dy++) {
         const nx = x + dx;
@@ -254,13 +291,14 @@ export default function Battleship({ setWin, setLose }) {
   function handleDragOver(event) {
     const { active, over } = event;
     if (!over) return setPreviewCells([]);
-
     const activeShip = shipsState.find((s) => s.name === active.id);
     if (!activeShip) return;
-
-    const dropCellId = parseInt(over.id);
     setPreviewCells(
-      calculateCoordinates(dropCellId, activeShip.size, activeShip.orientation),
+      calculateCoordinates(
+        parseInt(over.id),
+        activeShip.size,
+        activeShip.orientation,
+      ),
     );
   }
 
@@ -268,13 +306,11 @@ export default function Battleship({ setWin, setLose }) {
     const { active, over } = event;
     setActiveId(null);
     setPreviewCells([]);
-
     if (!over) return;
 
     const shipName = active.id;
-    const dropCellId = parseInt(over.id);
     const currentShip = shipsState.find((s) => s.name === shipName);
-
+    const dropCellId = parseInt(over.id);
     const x = dropCellId % 10;
     const y = Math.floor(dropCellId / 10);
 
@@ -283,7 +319,7 @@ export default function Battleship({ setWin, setLose }) {
     if (currentShip.orientation === "vertical" && y + currentShip.size > 10)
       return;
 
-    const newCoordinates = calculateCoordinates(
+    const newCoords = calculateCoordinates(
       dropCellId,
       currentShip.size,
       currentShip.orientation,
@@ -291,8 +327,7 @@ export default function Battleship({ setWin, setLose }) {
 
     const isOverlapping = shipsState.some((otherShip) => {
       if (otherShip.name === shipName || !otherShip.placed) return false;
-
-      return newCoordinates.some((coord) => {
+      return newCoords.some((coord) => {
         const halo = getSurroundingCells(coord);
         return halo.some((haloId) => otherShip.coordinates.includes(haloId));
       });
@@ -303,19 +338,17 @@ export default function Battleship({ setWin, setLose }) {
     setShipsState((prev) =>
       prev.map((ship) =>
         ship.name === shipName
-          ? { ...ship, placed: true, coordinates: newCoordinates }
+          ? { ...ship, placed: true, coordinates: newCoords }
           : ship,
       ),
     );
 
-    setBoard((prevBoard) =>
-      prevBoard.map((cell) => {
-        const isNewCell = newCoordinates.includes(cell.id);
-        const isOldCell =
-          currentShip.placed && currentShip.coordinates.includes(cell.id);
-
-        if (isNewCell) return { ...cell, hasShip: true, status: "ship" };
-        if (isOldCell) return { ...cell, hasShip: false, status: "empty" };
+    setBoard((prev) =>
+      prev.map((cell) => {
+        if (newCoords.includes(cell.id))
+          return { ...cell, hasShip: true, status: "ship" };
+        if (currentShip.placed && currentShip.coordinates.includes(cell.id))
+          return { ...cell, hasShip: false, status: "empty" };
         return cell;
       }),
     );
@@ -330,14 +363,11 @@ export default function Battleship({ setWin, setLose }) {
 
     const indexInShip = shipAtCell.coordinates.indexOf(cell.id);
     let iconName = "boatMiddle";
-
     if (indexInShip === 0) iconName = "boatBack";
     if (indexInShip === shipAtCell.size - 1) iconName = "boatFront";
 
     if (cell.status === "hit") {
-      if (iconName === "boatMiddle") iconName = "boatMiddleHit";
-      if (iconName === "boatBack") iconName = "boatBackHit";
-      if (iconName === "boatFront") iconName = "boatFrontHit";
+      iconName += "Hit";
     }
 
     const rotationAngle =
@@ -349,34 +379,15 @@ export default function Battleship({ setWin, setLose }) {
         width="32px"
         height="32px"
         className={css.cellIcon}
-        style={{
-          transform: `rotate(${rotationAngle})`,
-          display: "block",
-        }}
+        style={{ transform: `rotate(${rotationAngle})`, display: "block" }}
       />
     );
   }
 
-  useEffect(() => {
-    let intervalId;
-    if (isWaiting) {
-      intervalId = setInterval(() => {
-        setstopwatchValue((prev) => prev + 1);
-      }, 1000);
-    }
-
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [isWaiting]);
-
-  function formatstopwatch(stopwatchValue) {
-    const minutes = Math.floor(stopwatchValue / 60);
-    const seconds = stopwatchValue % 60;
-    const padded = String(seconds).padStart(2, "0");
-    return minutes > 0 ? `${minutes}:${padded}` : `${stopwatchValue}s`;
+  function formatStopwatch(secondsTotal) {
+    const minutes = Math.floor(secondsTotal / 60);
+    const seconds = String(secondsTotal % 60).padStart(2, "0");
+    return minutes > 0 ? `${minutes}:${seconds}` : `${secondsTotal}s`;
   }
 
   return (
@@ -395,19 +406,18 @@ export default function Battleship({ setWin, setLose }) {
                 >
                   <span className={css.playerTxt}>Your fleet</span>
                 </div>
-
                 <div className={css.wrapper}>
                   <div className={css.letters}>
-                    {letters.map((letter) => (
-                      <div key={letter} className={css.label}>
-                        {letter}
+                    {letters.map((l) => (
+                      <div key={l} className={css.label}>
+                        {l}
                       </div>
                     ))}
                   </div>
                   <div className={css.numbers}>
-                    {numbers.map((num) => (
-                      <div key={num} className={css.label}>
-                        {num}
+                    {numbers.map((n) => (
+                      <div key={n} className={css.label}>
+                        {n}
                       </div>
                     ))}
                   </div>
@@ -430,7 +440,6 @@ export default function Battleship({ setWin, setLose }) {
                     ))}
                   </div>
                 </div>
-
                 {!gamePhase && !isWaiting && (
                   <div className={css.shipyard}>
                     <h3 className={css.shipyardTitle}>Shipyard</h3>
@@ -441,7 +450,9 @@ export default function Battleship({ setWin, setLose }) {
                         ) : null,
                       )}
                     </div>
-                    <p className={`${css.hint} ${showHint && css.hintShowed}`}>
+                    <p
+                      className={`${css.hint} ${showHint ? css.hintShowed : ""}`}
+                    >
                       Press the "Spacebar" while holding a ship to change its
                       orientation
                     </p>
@@ -455,19 +466,18 @@ export default function Battleship({ setWin, setLose }) {
                 <div className={css.playersWrapper}>
                   <span className={css.playerTxt}>Opponent</span>
                 </div>
-
                 <div className={css.wrapper}>
                   <div className={css.letters}>
-                    {letters.map((letter) => (
-                      <div key={letter} className={css.label}>
-                        {letter}
+                    {letters.map((l) => (
+                      <div key={l} className={css.label}>
+                        {l}
                       </div>
                     ))}
                   </div>
                   <div className={css.numbers}>
-                    {numbers.map((num) => (
-                      <div key={num} className={css.label}>
-                        {num}
+                    {numbers.map((n) => (
+                      <div key={n} className={css.label}>
+                        {n}
                       </div>
                     ))}
                   </div>
@@ -478,17 +488,9 @@ export default function Battleship({ setWin, setLose }) {
                         className={`${css.cell} ${css.cellEnemy}`}
                         onClick={() => handleShoot(item.id)}
                       >
-                        {item.status === "hit" && (
+                        {(item.status === "hit" || item.status === "miss") && (
                           <Icon
-                            name="hit"
-                            width="32px"
-                            height="32px"
-                            className={`${css.cellIcon} ${css.popAnimation}`}
-                          />
-                        )}
-                        {item.status === "miss" && (
-                          <Icon
-                            name="miss"
+                            name={item.status}
                             width="32px"
                             height="32px"
                             className={`${css.cellIcon} ${css.popAnimation}`}
@@ -498,22 +500,15 @@ export default function Battleship({ setWin, setLose }) {
                     ))}
                   </div>
                 </div>
-
                 <div className={css.shipyard}>
                   <h3 className={css.shipyardTitle}>Graveyard</h3>
                   <div className={css.graveyardShips}>
-                    {[
-                      "Battleship (4)",
-                      "Submarine (3)",
-                      "Cruiser (2)",
-                      "Aircraft Carrier (5)",
-                      "Destroyer (3)",
-                    ].map((shipName) => (
+                    {shipsTemplate.map((ship) => (
                       <span
-                        key={shipName}
-                        className={`${css.shipyardDestroyed} ${destroyedShips.includes(shipName) ? css.destroyedShip : ""}`}
+                        key={ship.name}
+                        className={`${css.shipyardDestroyed} ${destroyedShips.includes(ship.name) ? css.destroyedShip : ""}`}
                       >
-                        {shipName}
+                        {ship.name}
                       </span>
                     ))}
                   </div>
@@ -538,18 +533,18 @@ export default function Battleship({ setWin, setLose }) {
               Restart
             </button>
           )}
-
           {isWaiting && (
             <span className={css.waitingOpponent}>
-              Waiting for an opponent… {formatstopwatch(stopwatchValue)}
+              Waiting for an opponent… {formatStopwatch(stopwatchValue)}
             </span>
           )}
-
           {gamePhase && (
             <span
               className={`${css.currentTurn} ${currentTurn === socket.id ? css.turnMy : css.turnEnemy}`}
             >
-              {currentTurn === socket.id ? "Your turn" : "Opponent's move..."}
+              {currentTurn === socket.id
+                ? `Your turn${gameMode === "multiplayer" ? ` (${timeLeft}s)` : ""}`
+                : `Opponent's move...${gameMode === "multiplayer" ? ` (${timeLeft}s)` : ""}`}
             </span>
           )}
         </div>

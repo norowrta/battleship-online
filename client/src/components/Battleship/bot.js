@@ -12,10 +12,8 @@ let gameState = {
 
 let ships = initializeShips();
 let board = createBoard();
-
 let botBoard = [];
 let botShips = [];
-
 let botState = {
   tried: new Set(),
   hits: [],
@@ -42,38 +40,21 @@ function createBoard() {
   }));
 }
 
-function getShips() {
-  return ships;
-}
-
-function getBoard() {
-  if (board.length === 0) board = createBoard();
-  return board;
-}
-
 function setBoard(newBoard) {
   board = newBoard;
+}
+
+function setShips(newShips) {
+  ships = newShips;
 }
 
 function fullReset() {
   board = createBoard();
   ships = initializeShips();
-
   botBoard = [];
   botShips = [];
-  botState = {
-    tried: new Set(),
-    hits: [],
-    queue: [],
-    orientation: null,
-  };
-
-  gameState = {
-    phase: "setup",
-    turn: "player",
-    winner: null,
-  };
-
+  botState = { tried: new Set(), hits: [], queue: [], orientation: null };
+  gameState = { phase: "setup", turn: "player", winner: null };
   return { board, ships };
 }
 
@@ -85,7 +66,6 @@ function getSurroundingCells(id) {
   const x = id % 10;
   const y = Math.floor(id / 10);
   const surrounding = [];
-
   for (let dx = -1; dx <= 1; dx++) {
     for (let dy = -1; dy <= 1; dy++) {
       const nx = x + dx;
@@ -102,7 +82,6 @@ function placeShipsRandomly() {
   let localBoard = createBoard();
   let localShips = initializeShips();
   let occupied = new Set();
-
   const MAX_ATTEMPTS = 1000;
   let shipIndex = 0;
 
@@ -114,7 +93,6 @@ function placeShipsRandomly() {
     while (!placed && attempts < MAX_ATTEMPTS) {
       attempts++;
       const orientation = Math.random() < 0.5 ? "horizontal" : "vertical";
-
       const startX =
         orientation === "horizontal"
           ? randomNumber(0, X_SIZE - ship.size)
@@ -123,7 +101,6 @@ function placeShipsRandomly() {
         orientation === "vertical"
           ? randomNumber(0, Y_SIZE - ship.size)
           : randomNumber(0, Y_SIZE - 1);
-
       const startId = startY * X_SIZE + startX;
 
       const newCoords = Array.from({ length: ship.size }, (_, i) =>
@@ -139,9 +116,7 @@ function placeShipsRandomly() {
       newCoords.forEach((id) => {
         localBoard[id].hasShip = true;
         localBoard[id].status = "ship";
-
-        const halo = getSurroundingCells(id);
-        halo.forEach((haloId) => occupied.add(haloId));
+        getSurroundingCells(id).forEach((haloId) => occupied.add(haloId));
       });
 
       placed = true;
@@ -155,7 +130,6 @@ function placeShipsRandomly() {
       localBoard = createBoard();
     }
   }
-
   return { board: localBoard, ships: localShips };
 }
 
@@ -163,62 +137,37 @@ function startGame() {
   const botData = placeShipsRandomly();
   botBoard = botData.board;
   botShips = botData.ships;
-
-  gameState = {
-    phase: "playing",
-    turn: "player",
-    winner: null,
-  };
-
-  botState = {
-    tried: new Set(),
-    hits: [],
-    queue: [],
-  };
-
+  gameState = { phase: "playing", turn: "player", winner: null };
+  botState = { tried: new Set(), hits: [], queue: [], orientation: null };
   return gameState;
 }
 
 function registerHitOnShip(cellId, shipList) {
   const ship = shipList.find((s) => s.coordinates.includes(cellId));
   if (!ship) return null;
-
   ship.hitCount = (ship.hitCount || 0) + 1;
-
-  if (ship.hitCount === ship.size) {
-    ship.sunk = true;
-  }
-
+  if (ship.hitCount === ship.size) ship.sunk = true;
   return ship;
 }
 
 function playerShoot(cellId) {
-  if (gameState.phase !== "playing" || gameState.turn !== "player") {
-    return null;
-  }
+  if (gameState.phase !== "playing" || gameState.turn !== "player") return null;
 
   const cell = botBoard.find((c) => c.id === cellId);
-  if (!cell) return null;
-
-  if (cell.status === "hit" || cell.status === "miss") {
-    return null;
-  }
+  if (!cell || cell.status === "hit" || cell.status === "miss") return null;
 
   let sunkShip = null;
 
   if (cell.hasShip) {
     cell.status = "hit";
+    gameState.turn = "player";
 
     const ship = registerHitOnShip(cell.id, botShips);
-
-    if (ship && ship.sunk) {
-      sunkShip = ship;
-    }
+    if (ship && ship.sunk) sunkShip = ship;
 
     if (checkWin(botShips)) {
       gameState.phase = "finished";
       gameState.winner = "player";
-
       return {
         updatedCell: cell,
         gameState,
@@ -227,19 +176,26 @@ function playerShoot(cellId) {
         gameFinished: true,
       };
     }
+
+    return {
+      updatedCell: cell,
+      gameState,
+      hit: true,
+      sunkShip,
+      gameFinished: false,
+    };
   } else {
     cell.status = "miss";
+    gameState.turn = "bot";
+
+    return {
+      updatedCell: cell,
+      gameState,
+      hit: false,
+      sunkShip: null,
+      gameFinished: false,
+    };
   }
-
-  gameState.turn = "bot";
-
-  return {
-    updatedCell: cell,
-    gameState,
-    hit: cell.status === "hit",
-    sunkShip,
-    gameFinished: false,
-  };
 }
 
 function bot() {
@@ -259,9 +215,7 @@ function bot() {
         !botState.tried.has(c.id) &&
         (c.status === "empty" || c.status === "ship"),
     );
-
-    const randomIndex = randomNumber(0, availableCells.length - 1);
-    targetCell = availableCells[randomIndex];
+    targetCell = availableCells[randomNumber(0, availableCells.length - 1)];
   }
 
   return botShoot(targetCell);
@@ -271,32 +225,25 @@ function botShoot(targetCell) {
   if (!targetCell) return null;
 
   botState.tried.add(targetCell.id);
-
   let sunkShip = null;
 
   if (targetCell.hasShip) {
     targetCell.status = "hit";
+    gameState.turn = "bot";
     botState.hits.push(targetCell.id);
 
     if (botState.hits.length >= 2) {
       const firstHit = botState.hits[0];
-      const currentHit = targetCell.id;
+      botState.orientation =
+        Math.floor(firstHit / X_SIZE) === Math.floor(targetCell.id / X_SIZE)
+          ? "horizontal"
+          : "vertical";
 
-      if (Math.floor(firstHit / X_SIZE) === Math.floor(currentHit / X_SIZE)) {
-        botState.orientation = "horizontal";
-      } else {
-        botState.orientation = "vertical";
-      }
-
-      if (botState.orientation === "horizontal") {
-        botState.queue = botState.queue.filter(
-          (id) => Math.floor(id / X_SIZE) === Math.floor(firstHit / X_SIZE),
-        );
-      } else if (botState.orientation === "vertical") {
-        botState.queue = botState.queue.filter(
-          (id) => id % X_SIZE === firstHit % X_SIZE,
-        );
-      }
+      botState.queue = botState.queue.filter((id) =>
+        botState.orientation === "horizontal"
+          ? Math.floor(id / X_SIZE) === Math.floor(firstHit / X_SIZE)
+          : id % X_SIZE === firstHit % X_SIZE,
+      );
     }
 
     const ship = registerHitOnShip(targetCell.id, ships);
@@ -307,28 +254,23 @@ function botShoot(targetCell) {
       botState.hits = [];
       botState.orientation = null;
 
-      for (let i = 0; i < ship.coordinates.length; i++) {
-        const id = ship.coordinates[i];
-
-        const surrounding = getSurroundingCells(id);
-        surrounding.forEach((cellId) => botState.tried.add(cellId));
-      }
+      ship.coordinates.forEach((id) => {
+        getSurroundingCells(id).forEach((cellId) => botState.tried.add(cellId));
+      });
     } else {
       let ns = neighbors(targetCell.id);
-
-      if (botState.orientation === "horizontal") {
+      if (botState.orientation === "horizontal")
         ns = ns.filter(
           (id) =>
             Math.floor(id / X_SIZE) === Math.floor(targetCell.id / X_SIZE),
         );
-      } else if (botState.orientation === "vertical") {
+      else if (botState.orientation === "vertical")
         ns = ns.filter((id) => id % X_SIZE === targetCell.id % X_SIZE);
-      }
-      for (const id of ns) {
-        if (!botState.tried.has(id) && !botState.queue.includes(id)) {
+
+      ns.forEach((id) => {
+        if (!botState.tried.has(id) && !botState.queue.includes(id))
           botState.queue.push(id);
-        }
-      }
+      });
     }
 
     if (checkWin(ships)) {
@@ -357,7 +299,6 @@ function botShoot(targetCell) {
 
   targetCell.status = "miss";
   gameState.turn = "player";
-
   return {
     hit: false,
     miss: true,
@@ -367,27 +308,15 @@ function botShoot(targetCell) {
   };
 }
 
-function xyFromId(id) {
+function neighbors(id) {
   const x = id % X_SIZE;
   const y = Math.floor(id / X_SIZE);
-  return { x, y };
-}
+  const finalIds = [];
 
-function inBounds(x, y) {
-  return x >= 0 && x < X_SIZE && y >= 0 && y < Y_SIZE;
-}
-
-function neighbors(id) {
-  const { x, y } = xyFromId(id);
-  const directions = [
-    { x, y: y - 1 },
-    { x: x + 1, y },
-    { x, y: y + 1 },
-    { x: x - 1, y },
-  ];
-
-  const valid = directions.filter(({ x, y }) => inBounds(x, y));
-  const finalIds = valid.map(({ x, y }) => y * X_SIZE + x);
+  if (y > 0) finalIds.push((y - 1) * X_SIZE + x);
+  if (x < X_SIZE - 1) finalIds.push(y * X_SIZE + (x + 1));
+  if (y < Y_SIZE - 1) finalIds.push((y + 1) * X_SIZE + x);
+  if (x > 0) finalIds.push(y * X_SIZE + (x - 1));
 
   return finalIds;
 }
@@ -396,8 +325,12 @@ function checkWin(shipList) {
   return shipList.every((s) => s.sunk);
 }
 
-function setShips(newShips) {
-  ships = newShips;
-}
-
-export { placeShipsRandomly, playerShoot, bot, fullReset, startGame };
+export {
+  placeShipsRandomly,
+  playerShoot,
+  bot,
+  fullReset,
+  startGame,
+  setBoard,
+  setShips,
+};
