@@ -1,4 +1,4 @@
-const shipsTemplate = require("./ships.json");
+import shipsTemplate from "./ships.json";
 
 const X_SIZE = 10;
 const Y_SIZE = 10;
@@ -400,15 +400,4 @@ function setShips(newShips) {
   ships = newShips;
 }
 
-module.exports = {
-  getShips,
-  getBoard,
-  setBoard,
-  placeShipsRandomly,
-  fullReset,
-  startGame,
-  playerShoot,
-  bot,
-  botShoot,
-  setShips,
-};
+export { placeShipsRandomly, playerShoot, bot, fullReset, startGame };

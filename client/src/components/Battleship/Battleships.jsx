@@ -5,6 +5,13 @@ import DroppableCell from "./DroppableCell.jsx";
 import Icon from "../Icon";
 import css from "./battleships.module.css";
 import shipsTemplate from "./ships.json";
+import {
+  placeShipsRandomly,
+  playerShoot,
+  bot,
+  fullReset,
+  startGame,
+} from "./bot.js";
 
 import { socket } from "../../socket.js";
 
@@ -32,6 +39,9 @@ export default function Battleship({ setWin, setLose }) {
     structuredClone(shipsTemplate),
   );
   const [destroyedShips, setDestroyedShips] = useState([]);
+
+  const [gameMode, setGameMode] = useState(null);
+  const [isBotThinking, setIsBotThinking] = useState(false);
 
   const [gamePhase, setGamePhase] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
@@ -96,38 +106,127 @@ export default function Battleship({ setWin, setLose }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [activeId]);
 
-  async function startGame() {
+  async function startMultiplayerGame() {
     const allPlaced = shipsState.every((ship) => ship.placed === true);
     if (!allPlaced) {
       alert("Please place all ships!");
       return;
     }
 
+    setGameMode("multiplayer");
     socket.emit("player_ready", { board, shipsState });
     setIsWaiting(true);
     setstopwatchValue(0);
   }
 
+  function startBotGame() {
+    const allPlaced = shipsState.every((ship) => ship.placed === true);
+    if (!allPlaced) {
+      alert("Please place all ships!");
+      return;
+    }
+    setGameMode("bot");
+    fullReset();
+    startGame();
+
+    setIsWaiting(false);
+    setGamePhase(true);
+    setCurrentTurn(socket.id);
+  }
+
   function handleShoot(cellId) {
     if (!gamePhase) return;
-    socket.emit("shoot", cellId);
+
+    if (gameMode === "multiplayer") {
+      socket.emit("shoot", cellId);
+    } else if (gameMode === "bot") {
+      botTurn(cellId);
+    }
+  }
+
+  function botTurn(cellId) {
+    if (isBotThinking || currentTurn !== socket.id) return;
+    setIsBotThinking(true);
+
+    const playerShot = playerShoot(cellId);
+
+    if (!playerShot) {
+      setIsBotThinking(false);
+      return;
+    }
+
+    setOppBoard((prev) =>
+      prev.map((c) =>
+        c.id === playerShot.updatedCell.id ? playerShot.updatedCell : c,
+      ),
+    );
+
+    if (playerShoot.sunkShip) {
+      setDestroyedShips((prev) => [
+        ...prev,
+        `${playerShoot.sunkShip.name} (${playerShoot.sunkShip.size})`,
+      ]);
+    }
+
+    if (playerShoot.gameFinished) {
+      setTimeout(() => {
+        alert("You won!");
+        setWin((prev) => prev + 1);
+        setGamePhase(false);
+        setIsGameOver(true);
+      }, 300);
+      setIsBotThinking(false);
+      return;
+    }
+
+    setCurrentTurn("bot");
+
+    setTimeout(() => {
+      const botShot = bot();
+
+      setBoard((prev) =>
+        prev.map((c) =>
+          c.id === botShot.updatedCell.id ? botShot.updatedCell : c,
+        ),
+      );
+
+      if (botShot.gameFinished) {
+        setTimeout(() => {
+          alert("Bot won!");
+          setLose((prev) => prev + 1);
+          setGamePhase(false);
+          setIsGameOver(true);
+        }, 300);
+        setIsBotThinking(false);
+        return;
+      } else {
+        setCurrentTurn(socket.id);
+      }
+      setIsBotThinking(false);
+    }, 600);
   }
 
   async function handleRestart() {
     try {
-      socket.emit("restart_game");
-      setBoard(generateEmptyBoard());
-      setOppBoard(generateEmptyBoard());
-      setShipsState(structuredClone(shipsTemplate));
-      setDestroyedShips([]);
-      setIsGameOver(false);
-      setGamePhase(false);
-      setIsWaiting(false);
-      setCurrentTurn(null);
-      setPlayerRole(null);
-    } catch (err) {
-      console.error(err);
+      if (gameMode === "multiplayer") {
+        socket.emit("restart_game");
+      } else if (gameMode === "bot") {
+        fullReset();
+      }
+    } catch (error) {
+      console.error(error);
     }
+
+    setBoard(generateEmptyBoard());
+    setOppBoard(generateEmptyBoard());
+    setShipsState(structuredClone(shipsTemplate));
+    setDestroyedShips([]);
+    setIsGameOver(false);
+    setGamePhase(false);
+    setIsWaiting(false);
+    setCurrentTurn(null);
+    setPlayerRole(null);
+    setGameMode(null);
   }
 
   function getSurroundingCells(id) {
@@ -424,9 +523,14 @@ export default function Battleship({ setWin, setLose }) {
           </div>
 
           {!gamePhase && !isWaiting && !isGameOver && (
-            <button className={css.buttonPlay} onClick={startGame}>
-              Play
-            </button>
+            <div className={css.playButtons}>
+              <button className={css.buttonPlay} onClick={startMultiplayerGame}>
+                Play Multiplayer
+              </button>
+              <button className={css.buttonPlay} onClick={startBotGame}>
+                Play against bot
+              </button>
+            </div>
           )}
 
           {isGameOver && (
