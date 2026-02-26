@@ -26,6 +26,10 @@ io.on("connection", (socket) => {
     `New player connected:${socket.id}, online players: ${onlinePlayers} `,
   );
 
+  socket.on("request_online_count", () => {
+    socket.emit("online_count", onlinePlayers);
+  });
+
   socket.on("player_ready", (data) => {
     if (waitingRoom !== null) {
       socket.join(waitingRoom);

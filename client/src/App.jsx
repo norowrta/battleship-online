@@ -22,6 +22,7 @@ export default function App() {
   }, [lose]);
 
   useEffect(() => {
+    socket.emit("request_online_count");
     const handleOnlineCount = (n) => setOnlinePlayers(n);
     socket.on("online_count", handleOnlineCount);
     return () => socket.off("online_count", handleOnlineCount);
