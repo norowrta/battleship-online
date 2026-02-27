@@ -19,6 +19,7 @@ let botState = {
   hits: [],
   queue: [],
   orientation: null,
+  skipOnce: new Set(),
 };
 
 function initializeShips() {
@@ -53,7 +54,13 @@ function fullReset() {
   ships = initializeShips();
   botBoard = [];
   botShips = [];
-  botState = { tried: new Set(), hits: [], queue: [], orientation: null };
+  botState = {
+    tried: new Set(),
+    hits: [],
+    queue: [],
+    orientation: null,
+    skipOnce: new Set(),
+  };
   gameState = { phase: "setup", turn: "player", winner: null };
   return { board, ships };
 }
@@ -138,7 +145,13 @@ function startGame() {
   botBoard = botData.board;
   botShips = botData.ships;
   gameState = { phase: "playing", turn: "player", winner: null };
-  botState = { tried: new Set(), hits: [], queue: [], orientation: null };
+  botState = {
+    tried: new Set(),
+    hits: [],
+    queue: [],
+    orientation: null,
+    skipOnce: new Set(),
+  };
   return gameState;
 }
 
@@ -148,6 +161,12 @@ function registerHitOnShip(cellId, shipList) {
   ship.hitCount = (ship.hitCount || 0) + 1;
   if (ship.hitCount === ship.size) ship.sunk = true;
   return ship;
+}
+
+function botshootGap(missId) {
+  neighbors(missId).forEach((item) => {
+    botState.skipOnce.add(item);
+  });
 }
 
 function playerShoot(cellId) {
@@ -210,12 +229,21 @@ function bot() {
   }
 
   if (!targetCell) {
-    const availableCells = board.filter(
+    let availableCells = board.filter(
       (c) =>
         !botState.tried.has(c.id) &&
         (c.status === "empty" || c.status === "ship"),
     );
+
+    if (botState.skipOnce.size > 0) {
+      availableCells = availableCells.filter(
+        (c) => !botState.skipOnce.has(c.id),
+      );
+    }
+
     targetCell = availableCells[randomNumber(0, availableCells.length - 1)];
+
+    botState.skipOnce.clear();
   }
 
   return botShoot(targetCell);
@@ -298,6 +326,9 @@ function botShoot(targetCell) {
   }
 
   targetCell.status = "miss";
+
+  botshootGap(targetCell.id);
+
   gameState.turn = "player";
   return {
     hit: false,
