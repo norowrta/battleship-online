@@ -6,11 +6,20 @@ const cors = require("cors");
 const app = express();
 app.use(cors({ origin: "http://localhost:5173" }));
 
-const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "http://localhost:5173" } });
+// const server = http.createServer(app);
+// const io = new Server(server, { cors: { origin: "http://localhost:5173" } });
 
-server.listen(3000, () => {
-  console.log("Server listening on port http://localhost:3000");
+// server.listen(3000, () => {
+//   console.log("Server listening on port http://localhost:3000");
+// });
+
+const server = http.createServer(app);
+const io = new Server(server);
+
+const port = process.env.PORT || 3000;
+
+server.listen(port, "0.0.0.0", () => {
+  console.log("Server listening on port " + port);
 });
 
 let games = {};
