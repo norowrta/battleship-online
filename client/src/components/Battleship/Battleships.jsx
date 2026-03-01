@@ -396,7 +396,7 @@ export default function Battleship({ setWin, setLose }) {
       onDragEnd={handleDragEnd}
       onDragOver={handleDragOver}
     >
-      <section className={css.section}>
+      <main className={css.section}>
         <div className={css.sectionContainer}>
           <div className={css.content}>
             <div className={css.container}>
@@ -443,7 +443,7 @@ export default function Battleship({ setWin, setLose }) {
 
                 {!gamePhase && !isWaiting && (
                   <div className={css.shipyard}>
-                    <h3 className={css.shipyardTitle}>Shipyard</h3>
+                    <h2 className={css.shipyardTitle}>Shipyard</h2>
                     <div className={css.shipyardShips}>
                       {shipsState.map((ship) =>
                         !ship.placed ? (
@@ -498,7 +498,7 @@ export default function Battleship({ setWin, setLose }) {
                     </div>
                   </div>
                   <div className={css.shipyard}>
-                    <h3 className={css.shipyardTitle}>Graveyard</h3>
+                    <h2 className={css.shipyardTitle}>Graveyard</h2>
                     <div className={css.graveyardShips}>
                       {shipsTemplate.map((ship) => (
                         <span
@@ -533,7 +533,7 @@ export default function Battleship({ setWin, setLose }) {
 
                   <img
                     src={shipPlacement}
-                    alt=""
+                    alt="Ship placement instructions"
                     className={css.instructionsImg}
                   />
                 </div>
@@ -572,7 +572,7 @@ export default function Battleship({ setWin, setLose }) {
             </span>
           )}
         </div>
-      </section>
+      </main>
       <DragOverlay dropAnimation={null}>
         {activeId ? (
           <DraggableShip

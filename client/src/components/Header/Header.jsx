@@ -5,6 +5,17 @@ import logo from "../../assets/battleship.svg";
 export default function Header({ wins, loses, onlinePlayers }) {
   return (
     <header className={css.header}>
+      <h1
+        style={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          overflow: "hidden",
+          clip: "rect(0 0 0 0)",
+        }}
+      >
+        Battleship - Multiplayer Online Game
+      </h1>
       <div className={css.headerContainer}>
         <div className={css.headerLogos}>
           <a

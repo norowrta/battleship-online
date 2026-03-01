@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://battleship-client-cvqs.onrender.com/sitemap.xml
