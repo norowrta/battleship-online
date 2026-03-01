@@ -1,6 +1,6 @@
 .header {
-  background: rgba(157, 157, 157, 0.1);
-  border-bottom: 2px solid rgba(113, 124, 150, 0.2);
+  background-color: #9d9d9d1a; /* rgba(157, 157, 157, 0.1) */
+  border-bottom: 2px solid #717c9633; /* rgba(113, 124, 150, 0.2) */
   width: 100%;
 }
 
@@ -19,21 +19,32 @@
   gap: 12px;
 }
 
+.headerLink {
+  display: flex;
+  align-items: center;
+  transition: opacity 0.2s ease;
+}
+
+.headerLink:hover {
+  opacity: 0.7;
+}
+
 .headerLogoFigma {
-  height: 2.54vh;
-  width: 1.6vw;
+  height: 28px;
+  width: 19px;
+  display: block;
 }
 
 .headerLine {
-  height: 24px;
+  height: 36px;
   width: 2px;
-  background-color: rgba(209, 210, 222, 1);
+  background-color: #d1d2de;
+  border-radius: 2px;
 }
 
 .headerLogo {
-  height: 2.65vh;
-  user-select: none;
-  -webkit-user-drag: none;
+  height: 36px;
+  width: auto;
 }
 
 .headerCount {
@@ -45,7 +56,7 @@
 .headerCountValue {
   color: #717c96;
   font-family: var(--sub-font);
-  font-size: 14px;
   font-weight: 500;
+  font-size: 14px;
   line-height: 1.4;
 }

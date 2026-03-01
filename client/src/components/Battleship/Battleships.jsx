@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { DndContext } from "@dnd-kit/core";
+import { DndContext, DragOverlay } from "@dnd-kit/core";
 import DraggableShip from "./DraggableShip.jsx";
 import DroppableCell from "./DroppableCell.jsx";
 import Icon from "../Icon";
 import css from "./battleships.module.css";
+import "animate.css";
 import shipsTemplate from "./ships.json";
 import {
   playerShoot,
@@ -17,6 +18,8 @@ import { socket } from "../../socket.js";
 
 const letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
 const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+import shipPlacement from "../../assets/ship-placement.svg";
 
 function calculateCoordinates(startId, size, orientation) {
   return Array.from({ length: size }, (_, i) =>
@@ -53,7 +56,6 @@ export default function Battleship({ setWin, setLose }) {
 
   const [activeId, setActiveId] = useState(null);
   const [previewCells, setPreviewCells] = useState([]);
-  const [showHint, setShowHint] = useState(false);
 
   useEffect(() => {
     socket.on("update_game", (data) => {
@@ -285,7 +287,6 @@ export default function Battleship({ setWin, setLose }) {
 
   function handleDragStart(event) {
     setActiveId(event.active.id);
-    setShowHint(true);
   }
 
   function handleDragOver(event) {
@@ -352,7 +353,6 @@ export default function Battleship({ setWin, setLose }) {
         return cell;
       }),
     );
-    setShowHint(false);
   }
 
   function getShipContent(cell) {
@@ -440,6 +440,7 @@ export default function Battleship({ setWin, setLose }) {
                     ))}
                   </div>
                 </div>
+
                 {!gamePhase && !isWaiting && (
                   <div className={css.shipyard}>
                     <h3 className={css.shipyardTitle}>Shipyard</h3>
@@ -450,70 +451,93 @@ export default function Battleship({ setWin, setLose }) {
                         ) : null,
                       )}
                     </div>
-                    <p
-                      className={`${css.hint} ${showHint ? css.hintShowed : ""}`}
-                    >
-                      Press the "Spacebar" while holding a ship to change its
-                      orientation
-                    </p>
                   </div>
                 )}
               </div>
 
               <div className={css.vl}></div>
 
-              <div className={css.contentPart}>
-                <div className={css.playersWrapper}>
-                  <span className={css.playerTxt}>Opponent</span>
+              {gameMode !== null ? (
+                <div className={css.contentPart}>
+                  <div className={css.playersWrapper}>
+                    <span className={css.playerTxt}>Opponent</span>
+                  </div>
+                  <div className={css.wrapper}>
+                    <div className={css.letters}>
+                      {letters.map((l) => (
+                        <div key={l} className={css.label}>
+                          {l}
+                        </div>
+                      ))}
+                    </div>
+                    <div className={css.numbers}>
+                      {numbers.map((n) => (
+                        <div key={n} className={css.label}>
+                          {n}
+                        </div>
+                      ))}
+                    </div>
+                    <div className={css.grid}>
+                      {oppBoard.map((item) => (
+                        <div
+                          key={item.id}
+                          className={`${css.cell} ${css.cellEnemy}`}
+                          onClick={() => handleShoot(item.id)}
+                        >
+                          {(item.status === "hit" ||
+                            item.status === "miss") && (
+                            <Icon
+                              name={item.status}
+                              width="32px"
+                              height="32px"
+                              className={`${css.cellIcon} ${css.popAnimation}`}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className={css.shipyard}>
+                    <h3 className={css.shipyardTitle}>Graveyard</h3>
+                    <div className={css.graveyardShips}>
+                      {shipsTemplate.map((ship) => (
+                        <span
+                          key={ship.name}
+                          className={`${css.shipyardDestroyed} ${destroyedShips.includes(ship.name) ? `${css.destroyedShip} animate__animated animate__flash` : ""}`}
+                        >
+                          {ship.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div className={css.wrapper}>
-                  <div className={css.letters}>
-                    {letters.map((l) => (
-                      <div key={l} className={css.label}>
-                        {l}
-                      </div>
-                    ))}
+              ) : (
+                <div className={css.instructions}>
+                  <div className={css.hint}>
+                    <span
+                      role="img"
+                      aria-label="anchor"
+                      className={css.hintSymbol}
+                    >
+                      &#x1F4A1;
+                    </span>
+                    <div className={css.hintTxtWrapper}>
+                      <span className={css.hintTitle}>Hint</span>
+
+                      <p className={css.hintTxt}>
+                        Press the space bar while holding
+                        <br /> the ship to change its orientation
+                      </p>
+                    </div>
                   </div>
-                  <div className={css.numbers}>
-                    {numbers.map((n) => (
-                      <div key={n} className={css.label}>
-                        {n}
-                      </div>
-                    ))}
-                  </div>
-                  <div className={css.grid}>
-                    {oppBoard.map((item) => (
-                      <div
-                        key={item.id}
-                        className={`${css.cell} ${css.cellEnemy}`}
-                        onClick={() => handleShoot(item.id)}
-                      >
-                        {(item.status === "hit" || item.status === "miss") && (
-                          <Icon
-                            name={item.status}
-                            width="32px"
-                            height="32px"
-                            className={`${css.cellIcon} ${css.popAnimation}`}
-                          />
-                        )}
-                      </div>
-                    ))}
-                  </div>
+
+                  <img
+                    src={shipPlacement}
+                    alt=""
+                    className={css.instructionsImg}
+                  />
                 </div>
-                <div className={css.shipyard}>
-                  <h3 className={css.shipyardTitle}>Graveyard</h3>
-                  <div className={css.graveyardShips}>
-                    {shipsTemplate.map((ship) => (
-                      <span
-                        key={ship.name}
-                        className={`${css.shipyardDestroyed} ${destroyedShips.includes(ship.name) ? css.destroyedShip : ""}`}
-                      >
-                        {ship.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -549,6 +573,35 @@ export default function Battleship({ setWin, setLose }) {
           )}
         </div>
       </section>
+      <DragOverlay dropAnimation={null}>
+        {activeId ? (
+          <DraggableShip
+            ship={shipsState.find((s) => s.name === activeId)}
+            isOverlay={true}
+          />
+        ) : null}
+      </DragOverlay>
+
+      <p className={css.license}>
+        UI Design by
+        <a
+          href="https://www.figma.com/community/file/954838223155879312/battleship"
+          className={css.licenseAuthor}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Unfold
+        </a>
+        /
+        <a
+          href="https://creativecommons.org/licenses/by/4.0/"
+          className={css.licenseLink}
+          target="_blank"
+          rel="noreferrer"
+        >
+          CC BY 4.0
+        </a>
+      </p>
     </DndContext>
   );
 }

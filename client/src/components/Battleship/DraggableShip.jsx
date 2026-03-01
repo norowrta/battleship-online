@@ -4,12 +4,17 @@ import { CSS } from "@dnd-kit/utilities";
 import Icon from "../Icon";
 import css from "./battleships.module.css";
 
-export default function DraggableShip({ ship }) {
+export default function DraggableShip({ ship, isOverlay = false }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: ship.name,
       data: { size: ship.size, orientation: ship.orientation },
     });
+
+  const displayOrientation =
+    !ship.placed && !isOverlay ? "horizontal" : ship.orientation;
+  const shipOpacity = isDragging && !isOverlay ? 0.5 : 1;
+  const appliedTransform = isOverlay ? transform : null;
 
   const segments = useMemo(() => {
     return Array.from({ length: ship.size }, (_, i) => {
@@ -20,10 +25,13 @@ export default function DraggableShip({ ship }) {
   }, [ship.size]);
 
   const style = {
-    transform: CSS.Translate.toString(transform),
+    transform: CSS.Translate.toString(appliedTransform),
+    opacity: shipOpacity,
+
+    cursor: isOverlay ? "grabbing" : "grab",
   };
 
-  const isVertical = ship.orientation === "vertical";
+  const isVertical = displayOrientation === "vertical";
 
   return (
     <div
