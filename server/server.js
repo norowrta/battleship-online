@@ -4,13 +4,27 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 
 const app = express();
-app.use(cors({ origin: "http://localhost:5173" }));
+
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "http://localhost:5173";
+
+app.use(
+  cors({
+    origin: FRONTEND_ORIGIN,
+    credentials: true,
+  }),
+);
 
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "http://localhost:5173" } });
+const io = new Server(server, {
+  cors: {
+    origin: FRONTEND_ORIGIN,
+    credentials: true,
+  },
+});
 
-server.listen(3000, () => {
-  console.log("Server listening on port http://localhost:3000");
+const port = process.env.PORT || 3000;
+server.listen(port, "0.0.0.0", () => {
+  console.log("Server listening on port " + port);
 });
 
 let games = {};
@@ -38,7 +52,7 @@ function startTurnTimer(roomId) {
   if (game.isFinished) return;
 
   game.timerId = setTimeout(() => {
-    console.log(`Time is up for room ${roomId}! Turn skipped.`);
+    // console.log(`Time is up for room ${roomId}! Turn skipped.`);
     game.turn = game.turn === "player1" ? "player2" : "player1";
 
     io.to(game.player1.id).emit("update_game", {
@@ -61,6 +75,23 @@ function startTurnTimer(roomId) {
 
     startTurnTimer(roomId);
   }, 15000);
+}
+
+function cleanupRoom(roomId) {
+  const game = games[roomId];
+  if (!game) return;
+
+  if (game.timerId) clearTimeout(game.timerId);
+
+  const ids = [game.player1?.id, game.player2?.id].filter(Boolean);
+  ids.forEach((id) => {
+    if (playerRooms[id]) delete playerRooms[id];
+  });
+
+  io.in(roomId).socketsLeave(roomId);
+
+  delete games[roomId];
+  // console.log(`Room cleaned: ${roomId}`);
 }
 
 io.on("connection", (socket) => {
@@ -192,18 +223,18 @@ io.on("connection", (socket) => {
       enemySunkShips: game.player1.sunkShips,
     });
 
-    startTurnTimer(roomId);
+    if (winner) {
+      if (game.timerId) clearTimeout(game.timerId);
+      setTimeout(() => cleanupRoom(roomId), 500);
+    } else {
+      startTurnTimer(roomId);
+    }
   });
 
   socket.on("restart_game", () => {
     const roomId = playerRooms[socket.id];
     if (roomId) {
-      if (currentGame && currentGame.timerId) {
-        clearTimeout(currentGame.timerId);
-      }
-
-      delete games[roomId];
-      io.in(roomId).socketsLeave(roomId);
+      cleanupRoom(roomId);
     }
   });
 
@@ -271,12 +302,7 @@ io.on("connection", (socket) => {
           waitingRoom = null;
         }
 
-        delete games[roomId];
-        delete playerRooms[socket.id];
-        if (winnerId) {
-          delete playerRooms[winnerId];
-          io.in(roomId).socketsLeave(roomId);
-        }
+        cleanupRoom(roomId);
       }
     }
   });
