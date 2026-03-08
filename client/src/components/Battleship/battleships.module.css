@@ -249,6 +249,14 @@
   border-radius: 8px;
 }
 
+.hintDesktop {
+  display: block;
+}
+
+.hintMobile {
+  display: none;
+}
+
 .playButtons {
   display: flex;
   gap: 20px;
@@ -442,4 +450,67 @@
   opacity: 0;
   animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   animation-delay: 0.45s;
+}
+
+/* Adaptive Styles */
+
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+  }
+
+  .sectionContainer {
+    gap: 40px;
+  }
+
+  .hintDesktop {
+    display: none;
+  }
+
+  .hintMobile {
+    display: block;
+  }
+}
+
+@media (max-width: 480px) {
+  .sectionContainer {
+    padding: 10px;
+    gap: 24px;
+  }
+
+  .wrapper {
+    grid-template-columns: 26px 1fr;
+    grid-template-rows: 26px 1fr;
+  }
+
+  .cell,
+  .shipCell {
+    width: 26px;
+    height: 26px;
+    border-radius: 3px;
+  }
+
+  .label {
+    font-size: 12px;
+  }
+
+  .instructions {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .shipyard {
+    gap: 12px;
+    height: auto;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+@media (max-height: 700px) {
+  .license {
+    display: none;
+  }
 }

@@ -4,7 +4,11 @@ import { CSS } from "@dnd-kit/utilities";
 import Icon from "../Icon";
 import css from "./battleships.module.css";
 
-export default function DraggableShip({ ship, isOverlay = false }) {
+export default function DraggableShip({
+  ship,
+  isOverlay = false,
+  onRotate,
+}) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: ship.name,
@@ -39,6 +43,7 @@ export default function DraggableShip({ ship, isOverlay = false }) {
       style={style}
       {...listeners}
       {...attributes}
+      onClick={onRotate}
       className={`${css.ship} ${isDragging ? css.isDragging : ""} ${isVertical ? css.shipVertical : ""}`}
     >
       {segments.map((iconName, index) => (

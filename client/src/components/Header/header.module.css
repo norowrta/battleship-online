@@ -60,3 +60,26 @@
   font-size: 14px;
   line-height: 1.4;
 }
+
+@media (max-width: 480px) {
+  .headerContainer {
+    padding: 8px 12px;
+  }
+
+  .headerLogo {
+    height: 24px;
+  }
+
+  .headerLine {
+    height: 24px;
+  }
+
+  .headerLogoFigma {
+    height: 18px;
+    width: 12px;
+  }
+
+  .headerCountValue {
+    font-size: 10px;
+  }
+}

@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { DndContext, DragOverlay } from "@dnd-kit/core";
+import {
+  DndContext,
+  DragOverlay,
+  useSensor,
+  useSensors,
+  MouseSensor,
+  TouchSensor,
+  KeyboardSensor,
+} from "@dnd-kit/core";
 import DraggableShip from "./DraggableShip.jsx";
 import DroppableCell from "./DroppableCell.jsx";
 import Icon from "../Icon";
@@ -56,6 +64,19 @@ export default function Battleship({ setWin, setLose }) {
 
   const [activeId, setActiveId] = useState(null);
   const [previewCells, setPreviewCells] = useState([]);
+
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: { distance: 5 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor),
+  );
 
   useEffect(() => {
     socket.on("update_game", (data) => {
@@ -150,6 +171,20 @@ export default function Battleship({ setWin, setLose }) {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [activeId]);
+
+  function rotateShip(shipName) {
+    setShipsState((prev) =>
+      prev.map((ship) =>
+        ship.name === shipName
+          ? {
+              ...ship,
+              orientation:
+                ship.orientation === "horizontal" ? "vertical" : "horizontal",
+            }
+          : ship,
+      ),
+    );
+  }
 
   function startMultiplayerGame() {
     if (!shipsState.every((ship) => ship.placed === true)) {
@@ -392,6 +427,7 @@ export default function Battleship({ setWin, setLose }) {
 
   return (
     <DndContext
+      sensors={sensors}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragOver={handleDragOver}
@@ -447,7 +483,11 @@ export default function Battleship({ setWin, setLose }) {
                     <div className={css.shipyardShips}>
                       {shipsState.map((ship) =>
                         !ship.placed ? (
-                          <DraggableShip key={ship.name} ship={ship} />
+                          <DraggableShip
+                            key={ship.name}
+                            ship={ship}
+                            onRotate={() => rotateShip(ship.name)}
+                          />
                         ) : null,
                       )}
                     </div>
@@ -524,9 +564,13 @@ export default function Battleship({ setWin, setLose }) {
                     <div className={css.hintTxtWrapper}>
                       <span className={css.hintTitle}>Hint</span>
 
-                      <p className={css.hintTxt}>
+                      <p className={`${css.hintTxt} ${css.hintDesktop}`}>
                         Press the space bar while holding
                         <br /> the ship to change its orientation
+                      </p>
+                      <p className={`${css.hintTxt} ${css.hintMobile}`}>
+                        Tap on ship to rotate
+                        <br /> Hold & drag to place
                       </p>
                     </div>
                   </div>
