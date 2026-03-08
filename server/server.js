@@ -31,6 +31,7 @@ let games = {};
 let waitingRoom = null;
 let playerRooms = {};
 let onlinePlayers = 0;
+let inQueue = 0;
 
 function generateEmptyBoard() {
   return Array.from({ length: 100 }, (_, i) => ({
@@ -97,16 +98,19 @@ function cleanupRoom(roomId) {
 io.on("connection", (socket) => {
   onlinePlayers += 1;
   io.emit("online_count", onlinePlayers);
-  console.log(
-    `New player connected: ${socket.id}, online players: ${onlinePlayers}`,
-  );
+  // console.log(
+  //   `New player connected: ${socket.id}, online players: ${onlinePlayers}`,
+  // );
 
-  socket.on("request_online_count", () =>
-    socket.emit("online_count", onlinePlayers),
-  );
+  socket.on("request_online_count", () => {
+    socket.emit("online_count", onlinePlayers);
+    socket.emit("in_queue", inQueue);
+  });
 
   socket.on("player_ready", (data) => {
     if (waitingRoom !== null) {
+      inQueue -= 1;
+      io.emit("in_queue", inQueue);
       socket.join(waitingRoom);
       games[waitingRoom].player2 = {
         id: socket.id,
@@ -116,7 +120,7 @@ io.on("connection", (socket) => {
       };
       playerRooms[socket.id] = waitingRoom;
 
-      console.log(`Player ${socket.id} connected. The game begins!`);
+      // console.log(`Player ${socket.id} connected. The game begins!`);
       const game = games[waitingRoom];
 
       io.to(game.player1.id).emit("update_game", {
@@ -139,6 +143,9 @@ io.on("connection", (socket) => {
       startTurnTimer(waitingRoom);
       waitingRoom = null;
     } else {
+      inQueue += 1;
+      io.emit("in_queue", inQueue);
+
       const roomId = "room_" + socket.id;
       socket.join(roomId);
 
@@ -155,9 +162,9 @@ io.on("connection", (socket) => {
 
       playerRooms[socket.id] = roomId;
       waitingRoom = roomId;
-      console.log(
-        `Player created room ${roomId} and is waiting for an opponent...`,
-      );
+      // console.log(
+      //   `Player created room ${roomId} and is waiting for an opponent...`,
+      // );
     }
   });
 
@@ -240,10 +247,9 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     onlinePlayers -= 1;
-    io.emit("online_count", onlinePlayers);
-    console.log(
-      `Player disconnected: ${socket.id}, online players ${onlinePlayers}`,
-    );
+    // console.log(
+    //   `Player disconnected: ${socket.id}, online players ${onlinePlayers}`,
+    // );
 
     const roomId = playerRooms[socket.id];
     if (roomId) {
@@ -272,9 +278,9 @@ io.on("connection", (socket) => {
 
         if (winnerId) {
           if (!currentGame.isFinished) {
-            console.log(
-              `Player ${socket.id} disconnected. Player ${winnerId} wins by forfeit.`,
-            );
+            // console.log(
+            //   `Player ${socket.id} disconnected. Player ${winnerId} wins by forfeit.`,
+            // );
             io.to(winnerId).emit("opponent_disconnected", {
               message: "Opponent disconnected. You win!",
               winner: winnerId,
@@ -300,10 +306,12 @@ io.on("connection", (socket) => {
           }
         } else if (waitingRoom === roomId) {
           waitingRoom = null;
+          inQueue -= 1;
         }
 
         cleanupRoom(roomId);
       }
     }
+    io.emit("stats_update", onlinePlayers, inQueue);
   });
 });

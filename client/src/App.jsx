@@ -12,6 +12,7 @@ export default function App() {
   );
 
   const [onlinePlayers, setOnlinePlayers] = useState(0);
+  const [inQueue, setInQueue] = useState(0);
 
   useEffect(() => {
     localStorage.setItem("win", win);
@@ -24,13 +25,26 @@ export default function App() {
   useEffect(() => {
     socket.emit("request_online_count");
     const handleOnlineCount = (n) => setOnlinePlayers(n);
+    const handleQueueCount = (n) => setInQueue(n);
+    const handleStatsUpdate = (online, queue) => {
+      setOnlinePlayers(online);
+      setInQueue(queue);
+    };
+
     socket.on("online_count", handleOnlineCount);
-    return () => socket.off("online_count", handleOnlineCount);
+    socket.on("in_queue", handleQueueCount);
+    socket.on("stats_update", handleStatsUpdate);
+
+    return () => {
+      socket.off("online_count", handleOnlineCount);
+      socket.off("in_queue", handleQueueCount);
+      socket.off("stats_update", handleStatsUpdate);
+    };
   }, []);
 
   return (
     <>
-      <Header wins={win} loses={lose} onlinePlayers={onlinePlayers} />
+      <Header wins={win} loses={lose} onlinePlayers={onlinePlayers} inQueue={inQueue} />
       <Battleship setWin={setWin} setLose={setLose} />
     </>
   );

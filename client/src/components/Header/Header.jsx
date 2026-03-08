@@ -2,7 +2,7 @@ import css from "./header.module.css";
 import Icon from "../Icon";
 import logo from "../../assets/battleship.svg";
 
-export default function Header({ wins, loses, onlinePlayers }) {
+export default function Header({ wins, loses, onlinePlayers, inQueue }) {
   return (
     <header className={css.header}>
       <h1
@@ -33,7 +33,9 @@ export default function Header({ wins, loses, onlinePlayers }) {
         <div className={css.headerCount}>
           <span className={css.headerCountValue}>Wins: {wins}</span>
           <span className={css.headerCountValue}>Loses: {loses}</span>
-          <span className={css.headerCountValue}>Online: {onlinePlayers} </span>
+          <span className={css.headerCountValue}>
+            Online: {onlinePlayers} ({inQueue} in queue)
+          </span>
         </div>
       </div>
     </header>
