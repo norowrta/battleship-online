@@ -16,6 +16,7 @@ A classic Battleship game built from scratch with real-time multiplayer, an AI b
 * **Drag-and-Drop Placement:** Smooth ship positioning and rotation using `@dnd-kit/core`.
 * **Responsive Design:** Fully playable and optimized for both desktop and mobile devices.
 * **Secure Server Logic (Anti-Cheat):** The server only sends visible board data (hits and misses) to the client, keeping enemy ship locations completely hidden from the browser's network tab.
+* **SEO & Analytics Ready:** Fully configured with Open Graph tags for rich social sharing, plus Google Analytics and Microsoft Clarity for real-time UX monitoring.
 
 ## 🛠️ Tech Stack
 **Frontend:**
