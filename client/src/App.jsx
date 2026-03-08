@@ -24,27 +24,26 @@ export default function App() {
 
   useEffect(() => {
     socket.emit("request_online_count");
-    const handleOnlineCount = (n) => setOnlinePlayers(n);
-    const handleQueueCount = (n) => setInQueue(n);
-    const handleStatsUpdate = (online, queue) => {
-      setOnlinePlayers(online);
-      setInQueue(queue);
+    const handleStatsUpdate = ({ onlineCount, inQueueCount }) => {
+      setOnlinePlayers(onlineCount);
+      setInQueue(inQueueCount);
     };
 
-    socket.on("online_count", handleOnlineCount);
-    socket.on("in_queue", handleQueueCount);
     socket.on("stats_update", handleStatsUpdate);
 
     return () => {
-      socket.off("online_count", handleOnlineCount);
-      socket.off("in_queue", handleQueueCount);
       socket.off("stats_update", handleStatsUpdate);
     };
   }, []);
 
   return (
     <>
-      <Header wins={win} loses={lose} onlinePlayers={onlinePlayers} inQueue={inQueue} />
+      <Header
+        wins={win}
+        loses={lose}
+        onlinePlayers={onlinePlayers}
+        inQueue={inQueue}
+      />
       <Battleship setWin={setWin} setLose={setLose} />
     </>
   );
