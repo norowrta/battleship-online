@@ -106,14 +106,19 @@ function cleanupRoom(roomId) {
 
 io.on("connection", (socket) => {
   onlinePlayers += 1;
-  io.emit("online_count", onlinePlayers);
+  io.emit("stats_update", {
+    onlineCount: onlinePlayers,
+    inQueueCount: inQueue,
+  });
   // console.log(
   //   `New player connected: ${socket.id}, online players: ${onlinePlayers}`,
   // );
 
   socket.on("request_online_count", () => {
-    socket.emit("online_count", onlinePlayers);
-    socket.emit("in_queue", inQueue);
+    io.emit("stats_update", {
+      onlineCount: onlinePlayers,
+      inQueueCount: inQueue,
+    });
   });
 
   socket.on("player_ready", (data) => {
@@ -321,6 +326,9 @@ io.on("connection", (socket) => {
         cleanupRoom(roomId);
       }
     }
-    io.emit("stats_update", onlinePlayers, inQueue);
+    io.emit("stats_update", {
+      onlineCount: onlinePlayers,
+      inQueueCount: inQueue,
+    });
   });
 });
