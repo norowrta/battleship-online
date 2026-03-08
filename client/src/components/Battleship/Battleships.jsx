@@ -411,8 +411,8 @@ export default function Battleship({ setWin, setLose }) {
     return (
       <Icon
         name={iconName}
-        width="32px"
-        height="32px"
+        width="100%"
+        height="100%"
         className={css.cellIcon}
         style={{ transform: `rotate(${rotationAngle})`, display: "block" }}
       />
@@ -469,7 +469,7 @@ export default function Battleship({ setWin, setLose }) {
                           <div
                             className={`${css.cellBotMiss} ${css.popAnimation}`}
                           >
-                            <Icon name="botMiss" width="32px" height="32px" />
+                            <Icon name="botMiss" width="100%" height="100%" />
                           </div>
                         )}
                       </DroppableCell>
@@ -528,8 +528,8 @@ export default function Battleship({ setWin, setLose }) {
                             item.status === "miss") && (
                             <Icon
                               name={item.status}
-                              width="32px"
-                              height="32px"
+                              width="100%"
+                              height="100%"
                               className={`${css.cellIcon} ${css.popAnimation}`}
                             />
                           )}
@@ -566,7 +566,7 @@ export default function Battleship({ setWin, setLose }) {
 
                       <p className={`${css.hintTxt} ${css.hintDesktop}`}>
                         Press the space bar while holding
-                        <br /> the ship to change its orientation
+                        <br /> the ship, or click on the ship to rotate it.
                       </p>
                       <p className={`${css.hintTxt} ${css.hintMobile}`}>
                         Tap on ship to rotate

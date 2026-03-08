@@ -50,8 +50,8 @@ export default function DraggableShip({
         <div className={css.shipCell} key={index}>
           <Icon
             name={iconName}
-            width="32px"
-            height="32px"
+            width="100%"
+            height="100%"
             className={css.shipIcon}
           />
         </div>
