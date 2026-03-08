@@ -32,5 +32,36 @@ A classic Battleship game built from scratch with real-time multiplayer, an AI b
 **Deployment:**
 * Hosted fully on **Render** (both client and server)
 
+ ## 🚀 How to Run Locally
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/norowrta/battleship-online.git
+   cd battleship-online
+   ```
+
+2. **Start the Backend (Terminal 1):**
+   ```bash
+   cd server
+   npm install
+   npm run dev
+   ```
+   *Note: `npm run dev` uses `nodemon` for auto-reloading, while `npm start` uses standard Node.*
+
+3. **Start the Frontend (Terminal 2):**
+   Open a new terminal window/tab and run:
+   ```bash
+   cd client
+   npm install
+   ```
+   Create a `.env.development` file in the `client` folder so it can connect to the local backend:
+   ```text
+   VITE_SERVER_URL=http://localhost:3000
+   ```
+   Then start the Vite server:
+   ```bash
+   npm run dev
+   ```
+
 ## 📄 Credits
 * UI Design by [Unfold](https://www.figma.com/community/file/954838223155879312/battleship) under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
