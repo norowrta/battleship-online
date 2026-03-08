@@ -1,4 +1,5 @@
 node_modules
-dist
-dist-ssr
-*.local
+.env
+logs
+*.log
+npm-debug.log

@@ -41,6 +41,15 @@ function generateEmptyBoard() {
   }));
 }
 
+function getVisibleBoard(board) {
+  return board.map((cell) => {
+    if (cell.status === "hit" || cell.status === "miss") {
+      return { ...cell };
+    }
+    return { ...cell, hasShip: false, status: "empty" };
+  });
+}
+
 function checkWin(board) {
   const shipCells = board.filter((cell) => cell.hasShip === true);
   return shipCells.every((cell) => cell.status === "hit");
@@ -58,7 +67,7 @@ function startTurnTimer(roomId) {
 
     io.to(game.player1.id).emit("update_game", {
       myBoard: game.player1.board,
-      enemyBoard: game.player2.board,
+      enemyBoard: getVisibleBoard(game.player2.board),
       turn: game[game.turn].id,
       winner: null,
       role: "player1",
@@ -67,7 +76,7 @@ function startTurnTimer(roomId) {
 
     io.to(game.player2.id).emit("update_game", {
       myBoard: game.player2.board,
-      enemyBoard: game.player1.board,
+      enemyBoard: getVisibleBoard(game.player1.board),
       turn: game[game.turn].id,
       winner: null,
       role: "player2",
@@ -215,7 +224,7 @@ io.on("connection", (socket) => {
 
     io.to(game.player1.id).emit("update_game", {
       myBoard: game.player1.board,
-      enemyBoard: game.player2.board,
+      enemyBoard: getVisibleBoard(game.player2.board),
       turn: game[game.turn].id,
       winner,
       role: "player1",
@@ -223,7 +232,7 @@ io.on("connection", (socket) => {
     });
     io.to(game.player2.id).emit("update_game", {
       myBoard: game.player2.board,
-      enemyBoard: game.player1.board,
+      enemyBoard: getVisibleBoard(game.player1.board),
       turn: game[game.turn].id,
       winner,
       role: "player2",
