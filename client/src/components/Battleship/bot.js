@@ -450,7 +450,7 @@ function getSmartTargetCell() {
 
   candidates.sort((a, b) => b.score - a.score);
 
-  const RANDOMIZE_LEVEL = 5;
+  const RANDOMIZE_LEVEL = 3;
 
   let topCandidates = candidates.slice(
     0,
