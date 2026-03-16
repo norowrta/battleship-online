@@ -228,20 +228,26 @@ function bot() {
     }
   }
 
+  // if (!targetCell) {
+  //   let availableCells = board.filter(
+  //     (c) =>
+  //       !botState.tried.has(c.id) &&
+  //       (c.status === "empty" || c.status === "ship"),
+  //   );
+
+  //   if (botState.skipOnce.size > 0) {
+  //     availableCells = availableCells.filter(
+  //       (c) => !botState.skipOnce.has(c.id),
+  //     );
+  //   }
+
+  //   targetCell = availableCells[randomNumber(0, availableCells.length - 1)];
+
+  //   botState.skipOnce.clear();
+  // }
+
   if (!targetCell) {
-    let availableCells = board.filter(
-      (c) =>
-        !botState.tried.has(c.id) &&
-        (c.status === "empty" || c.status === "ship"),
-    );
-
-    if (botState.skipOnce.size > 0) {
-      availableCells = availableCells.filter(
-        (c) => !botState.skipOnce.has(c.id),
-      );
-    }
-
-    targetCell = availableCells[randomNumber(0, availableCells.length - 1)];
+    targetCell = getSmartTargetCell();
 
     botState.skipOnce.clear();
   }
@@ -354,6 +360,116 @@ function neighbors(id) {
 
 function checkWin(shipList) {
   return shipList.every((s) => s.sunk);
+}
+
+function getSmartTargetCell() {
+  let densityMap = Array(TOTAL_CELLS).fill(0);
+  let aliveShips = ships.filter((ship) => !ship.sunk);
+
+  aliveShips.forEach((ship) => {
+    let size = ship.size;
+
+    for (let y = 0; y < Y_SIZE; y++) {
+      for (let x = 0; x < X_SIZE; x++) {
+        if (x + size <= X_SIZE) {
+          let canPlaceH = true;
+          let tempIdsH = [];
+
+          for (let i = 0; i < size; i++) {
+            let id = y * X_SIZE + (x + i);
+
+            if (botState.tried.has(id)) {
+              canPlaceH = false;
+              break;
+            }
+            tempIdsH.push(id);
+          }
+
+          if (canPlaceH) {
+            tempIdsH.forEach((id) => {
+              densityMap[id]++;
+            });
+          }
+        }
+
+        if (y + size <= Y_SIZE) {
+          let canPlaceV = true;
+          let tempIdsV = [];
+
+          for (let i = 0; i < size; i++) {
+            let id = (y + i) * X_SIZE + x;
+
+            if (botState.tried.has(id)) {
+              canPlaceV = false;
+              break;
+            }
+            tempIdsV.push(id);
+          }
+
+          if (canPlaceV) {
+            tempIdsV.forEach((id) => {
+              densityMap[id]++;
+            });
+          }
+        }
+      }
+    }
+  });
+
+  for (let i = 0; i < TOTAL_CELLS; i++) {
+    let x = i % X_SIZE;
+    let y = Math.floor(i / X_SIZE);
+
+    if ((x + y) % 2 !== 0) {
+      densityMap[i] = 0;
+    }
+  }
+
+  // let maxScore = -1;
+  // let bestCellId = null;
+
+  // for (let i = 0; i < TOTAL_CELLS; i++) {
+  //   if (!botState.tried.has(i) && densityMap[i] > maxScore) {
+  //     maxScore = densityMap[i];
+  //     bestCellId = i;
+  //   }
+  // }
+
+  // if (bestCellId === null) {
+  //   let availableCells = board.filter((c) => !botState.tried.has(c.id));
+  //   bestCellId =
+  //     availableCells[Math.floor(Math.random() * availableCells.length)].id;
+  // }
+
+  let candidates = [];
+  for (let i = 0; i < TOTAL_CELLS; i++) {
+    if (!botState.tried.has(i)) {
+      candidates.push({ id: i, score: densityMap[i] });
+    }
+  }
+
+  candidates.sort((a, b) => b.score - a.score);
+
+  const RANDOMIZE_LEVEL = 5;
+
+  let topCandidates = candidates.slice(
+    0,
+    Math.min(RANDOMIZE_LEVEL, candidates.length),
+  );
+
+  let bestCellId = null;
+  if (topCandidates.length > 0) {
+    let randomIndex = Math.floor(Math.random() * topCandidates.length);
+    bestCellId = topCandidates[randomIndex].id;
+  }
+
+  if (bestCellId === null) {
+    let availableCells = board.filter((c) => !botState.tried.has(c.id));
+    bestCellId =
+      availableCells[Math.floor(Math.random() * availableCells.length)].id;
+  }
+
+  return board.find((c) => c.id === bestCellId);
 }
 
 export {
